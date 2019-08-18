@@ -64,4 +64,13 @@ public class SalesAppTest {
 		verify(salesApp, times(1)).getReportDataList(sales, true);
 		verify(salesApp, times(1)).uploadDocument(salesActivityReport);
 	}
+
+	@Test
+	public void should_return_sales_when_getSales(){
+		SalesApp salesApp = spy(new SalesApp());
+		SalesDao salesDao = mock(SalesDao.class);
+		doReturn(salesDao).when(salesApp).getSalesDao();
+		salesApp.getSales("1");
+		verify(salesApp, times(1)).getSalesDao();
+	}
 }
