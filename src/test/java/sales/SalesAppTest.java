@@ -2,7 +2,9 @@ package sales;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -24,5 +26,12 @@ public class SalesAppTest {
 		Sales sales = mock(Sales.class);
 		when(sales.getEffectiveTo()).thenReturn(new Date());
 		assertEquals(false,salesApp.isDateValid(sales));
+	}
+
+	@Test
+	public void should_return_Arrays_when_call_getHeaders(){
+		SalesApp salesApp = spy(new SalesApp());
+		List<String> headers = Arrays.asList("Sales ID", "Sales Name", "Activity", "Time");
+		assertEquals(salesApp.getHeaders(true),headers);
 	}
 }
