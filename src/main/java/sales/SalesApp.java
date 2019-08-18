@@ -20,8 +20,7 @@ public class SalesApp {
         List<SalesReportData> tempList = getTempList(reportDataList, maxRow);
         List<String> headers = getHeaders(isNatTrade);
         SalesActivityReport report = this.generateReport(headers, tempList);
-        EcmService ecmService = new EcmService();
-        ecmService.uploadDocument(report.toXml());
+        uploadDocument(report);
     }
 
     private SalesActivityReport generateReport(List<String> headers, List<SalesReportData> reportDataList) {
@@ -69,6 +68,11 @@ public class SalesApp {
             headers = Arrays.asList("Sales ID", "Sales Name", "Activity", "Local Time");
         }
         return headers;
+    }
+
+    protected void uploadDocument(SalesActivityReport report){
+        EcmService ecmService = new EcmService();
+        ecmService.uploadDocument(report.toXml());
     }
 
 }
