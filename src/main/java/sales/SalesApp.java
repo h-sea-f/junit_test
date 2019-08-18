@@ -8,56 +8,20 @@ import java.util.List;
 public class SalesApp {
 
     public void generateSalesActivityReport(String salesId, int maxRow, boolean isNatTrade, boolean isSupervisor) {
-
         SalesDao salesDao = new SalesDao();
-        SalesReportDao salesReportDao = new SalesReportDao();
-        List<String> headers = null;
-
-        List<SalesReportData> filteredReportDataList = new ArrayList<SalesReportData>();
-
         if (salesId == null) {
             return;
         }
-
         Sales sales = salesDao.getSalesBySalesId(salesId);
-
-        Date today = new Date();
-        if (today.after(sales.getEffectiveTo())
-                || today.before(sales.getEffectiveFrom())) {
+        if (!isDateValid(sales)) {
             return;
         }
-
-        List<SalesReportData> reportDataList = salesReportDao.getReportData(sales);
-
-        for (SalesReportData data : reportDataList) {
-            if ("SalesActivity".equalsIgnoreCase(data.getType())) {
-                if (data.isConfidential()) {
-                    if (isSupervisor) {
-                        filteredReportDataList.add(data);
-                    }
-                } else {
-                    filteredReportDataList.add(data);
-                }
-            }
-        }
-
-        List<SalesReportData> tempList = new ArrayList<SalesReportData>();
-        for (int i = 0; i < reportDataList.size() || i < maxRow; i++) {
-            tempList.add(reportDataList.get(i));
-        }
-        filteredReportDataList = tempList;
-
-        if (isNatTrade) {
-            headers = Arrays.asList("Sales ID", "Sales Name", "Activity", "Time");
-        } else {
-            headers = Arrays.asList("Sales ID", "Sales Name", "Activity", "Local Time");
-        }
-
-        SalesActivityReport report = this.generateReport(headers, reportDataList);
-
+        List<SalesReportData> reportDataList = getReportDataList(sales, isSupervisor);
+        List<SalesReportData> tempList = getTempList(reportDataList, maxRow);
+        List<String> headers = getHeaders(isNatTrade);
+        SalesActivityReport report = this.generateReport(headers, tempList);
         EcmService ecmService = new EcmService();
         ecmService.uploadDocument(report.toXml());
-
     }
 
     private SalesActivityReport generateReport(List<String> headers, List<SalesReportData> reportDataList) {
@@ -65,7 +29,9 @@ public class SalesApp {
         return null;
     }
 
-    protected List<SalesReportData> addfFilteredReportDataList(List<SalesReportData> reportDataList, boolean isSupervisor) {
+    protected List<SalesReportData> getReportDataList(Sales sales, boolean isSupervisor) {
+        SalesReportDao salesReportDao = new SalesReportDao();
+        List<SalesReportData> reportDataList = salesReportDao.getReportData(sales);
         List<SalesReportData> filteredReportDataList = new ArrayList<SalesReportData>();
         for (SalesReportData data : reportDataList) {
             if ("SalesActivity".equalsIgnoreCase(data.getType())) {
@@ -81,7 +47,7 @@ public class SalesApp {
         return filteredReportDataList;
     }
 
-    protected List<SalesReportData> tempList(List<SalesReportData> reportDataList,int maxRow){
+    protected List<SalesReportData> getTempList(List<SalesReportData> reportDataList, int maxRow) {
         List<SalesReportData> result = new ArrayList<SalesReportData>();
         for (int i = 0; i < reportDataList.size() || i < maxRow; i++) {
             result.add(reportDataList.get(i));
@@ -89,13 +55,20 @@ public class SalesApp {
         return result;
     }
 
-    protected boolean isDateValid(Sales sales){
+    protected boolean isDateValid(Sales sales) {
         Date today = new Date();
-        if (today.after(sales.getEffectiveTo())
-                || today.before(sales.getEffectiveFrom())) {
-            return false;
+        return !today.after(sales.getEffectiveTo())
+                && !today.before(sales.getEffectiveFrom());
+    }
+
+    protected List<String> getHeaders(boolean isNatTrade) {
+        List<String> headers;
+        if (isNatTrade) {
+            headers = Arrays.asList("Sales ID", "Sales Name", "Activity", "Time");
+        } else {
+            headers = Arrays.asList("Sales ID", "Sales Name", "Activity", "Local Time");
         }
-        return true;
+        return headers;
     }
 
 }
